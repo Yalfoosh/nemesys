@@ -65,7 +65,7 @@ class Block:
         del storage
 
     @staticmethod
-    def reallocate(storage: torch.Tensor, size: int, fill_value):
+    def reallocate(storage: torch.Tensor, size: int, fill_value: Any):
         size_difference = size - storage.shape[0]
 
         if size_difference == 0:
@@ -75,7 +75,7 @@ class Block:
         else:
             return torch.cat(
                 (
-                    storage.detach().clone(),
+                    storage,
                     Block.allocate(
                         size=size_difference,
                         shape=storage.shape[1:],
