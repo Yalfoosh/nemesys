@@ -5,9 +5,6 @@ from nemesys.utils.conversion import ShapeConversion
 
 
 class Block:
-    def __init__(self, size: int = 0):
-        self.allocate(size=size)
-
     @property
     def data(self):
         raise NotImplementedError
