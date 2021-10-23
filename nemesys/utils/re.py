@@ -1,0 +1,5 @@
+import re
+
+WHITESPACE_PATTERN = r"\s+"
+
+WHITESPACE_RE = re.compile(WHITESPACE_PATTERN)
