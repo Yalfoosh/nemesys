@@ -2,7 +2,7 @@ from typing import Any, Iterable, Tuple, Union, Optional
 
 import torch
 
-from nemesys.modelling.blocks.block import ShapedBlock
+from nemesys.modelling.blocks.shaped_block import ShapedBlock
 from nemesys.utils.conversion import (
     DeviceConversion,
     DtypeConversion,
@@ -33,10 +33,6 @@ class PyTorchBlock(ShapedBlock):
 
     # region Properties
     @property
-    def data(self) -> Optional[torch.Tensor]:
-        return self._data
-
-    @property
     def dtype(self) -> torch.dtype:
         return self._dtype
 
@@ -56,13 +52,17 @@ class PyTorchBlock(ShapedBlock):
             dtype=tensor.dtype,
             device=tensor.device,
         )
-        block.write(content=tensor)
+        block.data = tensor
 
         return block
 
     # endregion
 
     # region Static methods
+    @staticmethod
+    def prepare_data(content: torch.Tensor) -> torch.Tensor:
+        return content.clone()
+
     @staticmethod
     def prepare_default(
         base_shape: Tuple[int, ...],
@@ -74,52 +74,58 @@ class PyTorchBlock(ShapedBlock):
         )
 
     @staticmethod
-    def prepare_read(content: torch.Tensor, key: Optional[int]) -> torch.Tensor:
-        if key is None:
-            return content
-        else:
-            return content[key]
-
-    @staticmethod
-    def prepare_write(
+    def prepare_tensor(
         content: Optional[torch.Tensor],
         base_shape: Tuple[int, ...],
         dtype: torch.dtype,
         device: torch.device,
     ) -> torch.Tensor:
         if content is None:
-            new_content = PyTorchBlock.prepare_default(
+            content = PyTorchBlock.prepare_default(
                 base_shape=base_shape,
                 dtype=dtype,
                 device=device,
             )
         else:
-            new_content = PyTorchTensorPreparation.for_block_insertion(
+            content = PyTorchTensorPreparation.for_block_insertion(
                 tensor=content,
                 base_shape=base_shape,
                 dtype=dtype,
                 device=device,
             )
 
-        return new_content
+        return content
 
     # endregion
 
     # region Generation methods
+    def get_data(self) -> torch.Tensor:
+        return self.prepare_data(content=self._data)
+
     def get_defaulted(self) -> torch.Tensor:
         return self.prepare_default(
             base_shape=self._base_shape, dtype=self._dtype, device=self._device
         )
 
-    def get_read(self, key: Optional[Iterable[int]]) -> torch.Tensor:
-        return self.prepare_read(content=self._data, key=key)
-
-    def get_written(self, content: Optional[torch.Tensor]) -> torch.Tensor:
-        return self.prepare_write(old_content=self._data, new_content=content)
+    def get_tensor(self, content: Optional[torch.Tensor]) -> torch.Tensor:
+        return self.prepare_tensor(
+            content=content,
+            base_shape=self._base_shape,
+            dtype=self._dtype,
+            device=self._device,
+        )
 
     # endregion
 
     # region Block implementation
+    @property
+    def data(self) -> torch.Tensor:
+        return self.get_data()
+
+    @data.setter
+    def data(self, value: torch.Tensor):
+        self._data = self.get_tensor(content=value)
+
     @staticmethod
     def init_from(content: Any, cast_method: Optional[str] = None) -> "PyTorchBlock":
         if cast_method is None:
@@ -142,133 +148,20 @@ class PyTorchBlock(ShapedBlock):
             return PyTorchBlock.from_tensor(tensor=content)
 
     def default(self) -> "PyTorchBlock":
-        return PyTorchBlock.from_tensor(tensor=self.get_defaulted())
-
-    def read(self, key: Optional[Iterable[int]] = None) -> torch.Tensor:
-        return self.get_read(key=key)
-
-    def write(self, content: Optional[torch.Tensor] = None):
-        return self.get_written(content=content)
-
-    # endregion
-
-    # region Other methods
-    # TODO
-    """
-    @staticmethod
-    def address_emptiness_iterator_(
-        data: torch.Tensor,
-        empty_entry: torch.Tensor,
-        start: int = 0,
-        end: Optional[int] = None,
-    ) -> Iterable[bool]:
-        if end is None:
-            end = len(data)
-
-        for entry in data[start:end]:
-            yield entry == empty_entry
-
-    @staticmethod
-    def compress_(
-        data: torch.Tensor,
-        empty_entry: torch.Tensor,
-        start: int = 0,
-        end: Optional[int] = 0,
-    ) -> torch.Tensor:
-        non_empty_iterator = PyTorchBlock._non_empty_indices_iterator(
-            data=data, empty_entry=empty_entry, start=start, end=end
-        )
-        non_empty_spans = get_spans_from_indices(
-            indices=non_empty_iterator, is_sorted=True
-        )
-
-        return torch.cat(tuple(data[i:j] for i, j in non_empty_spans))
-
-    @staticmethod
-    def empty_indices_iterator_(
-        data: torch.Tensor,
-        empty_entry: torch.Tensor,
-        start: int = 0,
-        end: Optional[int] = None,
-    ) -> Iterable[int]:
-        for i, result in enumerate(
-            PyTorchBlock.address_emptiness_iterator_(
-                data=data, empty_entry=empty_entry, start=start, end=end
-            ),
-            start=start,
-        ):
-            if result:
-                yield i
-
-    @staticmethod
-    def non_empty_indices_iterator_(
-        data: torch.Tensor,
-        empty_entry: torch.Tensor,
-        start: int = 0,
-        end: Optional[int] = None,
-    ) -> Iterable[int]:
-        last = start
-
-        for empty_index in PyTorchBlock.empty_indices_iterator_(
-            data=data, empty_entry=empty_entry, start=start, end=end
-        ):
-            for i in enumerate(range(empty_index - last), start=last):
-                yield i
-
-            last = empty_index
-
-        for i in enumerate(range(len(data) - last), start=last):
-            yield i
-
-    @staticmethod
-    def wipe_(data: torch.Tensor, default_value: Any) -> torch.Tensor:
-        return torch.fill_(input=data, value=default_value)
-
-    def address_emptiness_iterator(
-        self, start: int = 0, end: Optional[int] = None
-    ) -> Iterable[bool]:
-        return self.address_emptiness_iterator_(
-            data=self._data, empty_entry=self.default_entry, start=start, end=end
-        )
-
-    def compress(self, start: int = 0, end: Optional[int] = None):
-        if end is None:
-            end = len(self.data)
-
-        self._data[start:end] = self.get_compressed(start=start, end=end)
-
-    def empty_indices_iterator(
-        self, start: int = 0, end: Optional[int] = None
-    ) -> Iterable[int]:
-        return self.empty_indices_iterator_(
-            data=self._data, empty_entry=self.default_entry, start=start, end=end
-        )
-
-    def get_compressed(self, start: int = 0, end: Optional[int] = None) -> torch.Tensor:
-        return self.compress_(
-            data=self._data, empty_entry=self.default_entry, start=start, end=end
-        )
-
-    def non_empty_indices_iterator(
-        self, start: int = 0, end: Optional[int] = None
-    ) -> Iterable[int]:
-        return self.non_empty_indices_iterator_(
-            data=self._data, empty_entry=self.default_entry, start=start, end=end
-        )
-    """
+        return PyTorchBlock.from_tensor(tensor=self.default())
 
     # endregion
 
     # region Dunder methods
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         fixed_str = WHITESPACE_RE.sub(" ", str(self).strip())
 
         return f"{self.__class__.__name__} <{self.dtype} on {self.device}> {fixed_str}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.data.data.cpu().numpy())
 
     # endregion
