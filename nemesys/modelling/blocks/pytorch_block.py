@@ -22,6 +22,8 @@ class PyTorchBlock(ShapedBlock):
         self._dtype = DtypeConversion.to_torch(dtype)
         self._device = DeviceConversion.to_torch(device)
 
+        self._data = None
+
         self.allocate(size=0)
 
     # region Properties
