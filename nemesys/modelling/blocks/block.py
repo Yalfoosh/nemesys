@@ -1,5 +1,4 @@
-import copy
-from typing import Any, Iterable, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 from nemesys.utils.conversion import ShapeConversion
 
