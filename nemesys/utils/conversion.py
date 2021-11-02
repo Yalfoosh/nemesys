@@ -1,4 +1,4 @@
-from typing import Iterable, Union
+from typing import Any, Iterable, Optional, Union
 
 import torch
 
@@ -61,3 +61,29 @@ class ShapeConversion:
                 )
 
         return shape_tuple
+
+
+class IterableConversion:
+    @staticmethod
+    def to_readable_string(
+        iterable: Iterable[Any],
+        default_string: Optional[str] = None,
+        separator: Optional[str] = None,
+        last_prefix: Optional[str] = None,
+    ):
+        if default_string is None:
+            default_string = ""
+        if separator is None:
+            separator = ", "
+        if last_prefix is None:
+            last_prefix = separator
+
+        iterable = list(sorted([str(x) for x in iterable]))
+
+        if len(iterable) == 0:
+            return default_string
+        elif len(iterable) == 1:
+            return iterable[0]
+        else:
+            return separator.join(iterable[:-1]) + f"{last_prefix}{iterable[-1]}"
+

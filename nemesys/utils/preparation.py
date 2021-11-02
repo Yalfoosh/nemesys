@@ -3,28 +3,60 @@ from typing import Tuple
 
 import torch
 
-from nemesys.utils.exceptions import PaddingException, ReshapingException
+from nemesys.utils.conversion import IterableConversion
+from nemesys.utils.exceptions import ModeException
 
 
-class TensorPreparation:
+class PyTorchTensorPreparation:
+    _pad_modes = {
+        "begin",
+        "center",
+        "end",
+    }
+
     @staticmethod
     def as_padded(
-        tensor: torch.Tensor, shape: Tuple[int], n_to_pad: int
+        tensor: torch.Tensor,
+        shape: Tuple[int],
+        n_to_pad: int,
+        pad_mode: str = "end",
     ) -> torch.Tensor:
         n_to_pad = max(0, n_to_pad)
 
         if n_to_pad != 0:
-            tensor = torch.cat(
-                (
-                    tensor.flatten(),
-                    torch.zeros(
-                        n_to_pad,
-                        dtype=tensor.dtype,
-                        device=tensor.device,
-                        requires_grad=False,
-                    ),
+            if pad_mode == "begin":
+                left_pad = n_to_pad
+            elif pad_mode == "center":
+                left_pad = n_to_pad // 2
+            elif pad_mode == "end":
+                left_pad = 0
+            else:
+                pad_strings = IterableConversion.to_readable_string(
+                    iterable=PyTorchTensorPreparation._pad_modes, last_prefix=" or "
                 )
-            ).reshape((-1, *shape))
+
+                raise ModeException(
+                    f"Invalid pad mode: {pad_mode}; must be one of {pad_strings}"
+                )
+
+            right_pad = n_to_pad - left_pad
+
+            left_pad = torch.zeros(
+                left_pad,
+                dtype=tensor.dtype,
+                device=tensor.device,
+                requires_grad=False,
+            )
+            right_pad = torch.zeros(
+                right_pad,
+                dtype=tensor.dtype,
+                device=tensor.device,
+                requires_grad=False,
+            )
+
+            tensor = torch.cat((left_pad, tensor.flatten(), right_pad)).reshape(
+                (-1, *shape)
+            )
 
         return tensor
 
@@ -37,13 +69,13 @@ class TensorPreparation:
     @staticmethod
     def for_block_insertion(
         tensor: torch.Tensor,
+        base_shape: Tuple[int, ...],
         dtype: torch.dtype,
         device: torch.device,
-        base_shape: Tuple[int],
-        allow_padding: bool = False,
-        allow_reshaping: bool = False,
     ):
-        tensor = TensorPreparation.for_block(tensor=tensor, dtype=dtype, device=device)
+        tensor = PyTorchTensorPreparation.for_block(
+            tensor=tensor, dtype=dtype, device=device
+        )
 
         if tensor.shape == base_shape:
             tensor = tensor.unsqueeze(dim=0)
@@ -55,21 +87,15 @@ class TensorPreparation:
             n_to_pad %= shape_size
 
             if n_to_pad != 0:
-                if allow_padding:
-                    tensor = TensorPreparation.as_padded(
-                        tensor=tensor, shape=base_shape, n_to_pad=n_to_pad
-                    )
-                else:
-                    raise PaddingException(
-                        "Tensor needs padding, but `allow_padding` is set to False"
-                    )
+                tensor = PyTorchTensorPreparation.as_padded(
+                    tensor=tensor,
+                    shape=base_shape,
+                    n_to_pad=n_to_pad,
+                    pad_mode="end",
+                )
 
             if tensor.shape[1:] != base_shape:
-                if allow_reshaping:
-                    tensor = tensor.reshape((-1, base_shape))
-                else:
-                    raise ReshapingException(
-                        "Tensor needs reshaping, but `allow_reshaping` is set to False"
-                    )
+                tensor = tensor.reshape((-1, base_shape))
 
         return tensor
+

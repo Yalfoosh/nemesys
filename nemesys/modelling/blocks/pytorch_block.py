@@ -3,28 +3,33 @@ from typing import Any, Iterable, Tuple, Union, Optional
 import torch
 
 from nemesys.modelling.blocks.block import ShapedBlock
-from nemesys.utils.conversion import DeviceConversion, DtypeConversion
-from nemesys.utils.preparation import TensorPreparation
+from nemesys.utils.conversion import (
+    DeviceConversion,
+    DtypeConversion,
+    IterableConversion,
+)
+from nemesys.utils.exceptions import ModeException
+from nemesys.utils.preparation import PyTorchTensorPreparation
 from nemesys.utils.re import WHITESPACE_RE
-from nemesys.utils.spans import get_spans_from_indices
 
 
 class PyTorchBlock(ShapedBlock):
+    _init_methods = {
+        "tensor",
+    }
+
     def __init__(
         self,
         base_shape: Union[int, Iterable[int]],
         dtype: Union[str, torch.dtype] = "float32",
         device: Union[str, torch.device] = "cpu",
-        default_value: Any = 0.0,
     ):
-        super().__init__(base_shape=base_shape, default_value=default_value)
+        super().__init__(base_shape=base_shape)
 
         self._dtype = DtypeConversion.to_torch(dtype)
         self._device = DeviceConversion.to_torch(device)
 
-        self._data = None
-
-        self.allocate(size=0)
+        self._data = self.get_defaulted()
 
     # region Properties
     @property
@@ -39,79 +44,117 @@ class PyTorchBlock(ShapedBlock):
     def device(self) -> torch.device:
         return self._device
 
-    @property
-    def default_entry(self) -> torch.Tensor:
-        return self.get_allocated(size=1)
-
     # endregion
 
-    # region Allocation
-    def allocate_(
-        self,
-        size: int,
-        base_shape: Tuple[int, ...],
-        dtype: torch.dtype,
-        device: torch.device,
-        default_value: Any = 0.0,
-    ):
-        return torch.full(
-            size=(size, *base_shape),
-            fill_value=default_value,
-            dtype=dtype,
-            device=device,
-            requires_grad=False,
+    # region Cast methods
+    @staticmethod
+    def from_tensor(tensor: torch.Tensor) -> "PyTorchBlock":
+        base_shape = tensor.shape[0] if len(tensor.shape) == 1 else tensor.shape[1:]
+
+        block = PyTorchBlock(
+            base_shape=base_shape,
+            dtype=tensor.dtype,
+            device=tensor.device,
         )
+        block.write(content=tensor)
 
-    def get_allocated(self, size: int) -> torch.Tensor:
-        return self.allocate_(
-            size=size,
-            base_shape=self.base_shape,
-            dtype=self.dtype,
-            device=self.device,
-            default_value=self.default_value,
-        )
-
-    def allocate(self, size: int):
-        self._data = self.get_allocated(size=size)
-
-    # ------------------------------------------------------------
-
-    def deallocate_(
-        self, data: torch.Tensor, size: Optional[int] = None
-    ) -> Optional[torch.Tensor]:
-        if size is None or size >= len(self.data):
-            del data
-            return None
-        else:
-            return data[: len(data) - size]
-
-    def get_deallocated(self, size: Optional[int] = None) -> Optional[torch.Tensor]:
-        return self.deallocate_(data=self._data, size=size)
-
-    def deallocate(self, size: Optional[int] = None):
-        self._data = self.get_deallocated(size=size)
-
-    # ------------------------------------------------------------
-
-    def reallocate_(self, data: torch.Tensor, new_size: int) -> torch.Tensor:
-        size_difference = len(data) - new_size
-
-        if size_difference == 0:
-            return data
-        elif size_difference < 0:
-            return self.deallocate(data=data, size=-size_difference)
-        else:
-            return torch.cat((data, self.allocate(size=size_difference)))
-
-    def get_reallocated(self, new_size: int) -> Optional[torch.Tensor]:
-        return self.reallocate_(data=self._data, new_size=new_size)
-
-    def reallocate(self, new_size: int):
-        self._data = self.get_reallocated(new_size=new_size)
+        return block
 
     # endregion
 
     # region Static methods
+    @staticmethod
+    def prepare_default(
+        base_shape: Tuple[int, ...],
+        dtype: torch.dtype,
+        device: torch.device,
+    ) -> torch.Tensor:
+        return torch.empty(
+            size=(0, *base_shape), dtype=dtype, device=device, requires_grad=False
+        )
+
+    @staticmethod
+    def prepare_read(content: torch.Tensor, key: Optional[int]) -> torch.Tensor:
+        if key is None:
+            return content
+        else:
+            return content[key]
+
+    @staticmethod
+    def prepare_write(
+        content: Optional[torch.Tensor],
+        base_shape: Tuple[int, ...],
+        dtype: torch.dtype,
+        device: torch.device,
+    ) -> torch.Tensor:
+        if content is None:
+            new_content = PyTorchBlock.prepare_default(
+                base_shape=base_shape,
+                dtype=dtype,
+                device=device,
+            )
+        else:
+            new_content = PyTorchTensorPreparation.for_block_insertion(
+                tensor=content,
+                base_shape=base_shape,
+                dtype=dtype,
+                device=device,
+            )
+
+        return new_content
+
+    # endregion
+
+    # region Generation methods
+    def get_defaulted(self) -> torch.Tensor:
+        return self.prepare_default(
+            base_shape=self._base_shape, dtype=self._dtype, device=self._device
+        )
+
+    def get_read(self, key: Optional[Iterable[int]]) -> torch.Tensor:
+        return self.prepare_read(content=self._data, key=key)
+
+    def get_written(self, content: Optional[torch.Tensor]) -> torch.Tensor:
+        return self.prepare_write(old_content=self._data, new_content=content)
+
+    # endregion
+
+    # region Block implementation
+    @staticmethod
+    def init_from(content: Any, cast_method: Optional[str] = None) -> "PyTorchBlock":
+        if cast_method is None:
+            if isinstance(content, torch.Tensor):
+                cast_method = "tensor"
+            else:
+                cast_method = None
+
+        if cast_method not in PyTorchBlock._init_methods:
+            cast_method_strings = IterableConversion.to_readable_string(
+                iterable=PyTorchBlock._init_methods, last_prefix=" or "
+            )
+
+            raise ModeException(
+                f"Invalid cast method: {cast_method}; must be one of "
+                f"{cast_method_strings}"
+            )
+
+        if cast_method == "tensor":
+            return PyTorchBlock.from_tensor(tensor=content)
+
+    def default(self) -> "PyTorchBlock":
+        return PyTorchBlock.from_tensor(tensor=self.get_defaulted())
+
+    def read(self, key: Optional[Iterable[int]] = None) -> torch.Tensor:
+        return self.get_read(key=key)
+
+    def write(self, content: Optional[torch.Tensor] = None):
+        return self.get_written(content=content)
+
+    # endregion
+
+    # region Other methods
+    # TODO
+    """
     @staticmethod
     def address_emptiness_iterator_(
         data: torch.Tensor,
@@ -124,29 +167,6 @@ class PyTorchBlock(ShapedBlock):
 
         for entry in data[start:end]:
             yield entry == empty_entry
-
-    @staticmethod
-    def append_(
-        data: torch.Tensor,
-        new_data: torch.Tensor,
-        allow_padding: bool = False,
-        allow_reshaping: bool = False,
-    ) -> torch.Tensor:
-        new_data = TensorPreparation.for_block_insertion(
-            tensor=new_data,
-            dtype=data.dtype,
-            device=data.device,
-            base_shape=data.shape[1:],
-            allow_padding=allow_padding,
-            allow_reshaping=allow_reshaping,
-        )
-
-        return torch.cat((data, new_data))
-
-    @staticmethod
-    def clear_(block: "PyTorchBlock"):
-        block.deallocate(size=None)
-        block.allocate(size=0)
 
     @staticmethod
     def compress_(
@@ -181,23 +201,6 @@ class PyTorchBlock(ShapedBlock):
                 yield i
 
     @staticmethod
-    def from_tensor_(tensor: torch.Tensor, default_value: Any = 0.0) -> "PyTorchBlock":
-        base_shape = tensor.shape[0] if len(tensor.shape) == 1 else tensor.shape[1:]
-
-        block = PyTorchBlock(
-            base_shape=base_shape,
-            dtype=tensor.dtype,
-            device=tensor.device,
-            default_value=default_value,
-        )
-
-        # No padding and reshaping is allowed since tensor should
-        # fit in block perfectly.
-        block.append(new_data=tensor, allow_padding=False, allow_reshaping=False)
-
-        return block
-
-    @staticmethod
     def non_empty_indices_iterator_(
         data: torch.Tensor,
         empty_entry: torch.Tensor,
@@ -221,30 +224,12 @@ class PyTorchBlock(ShapedBlock):
     def wipe_(data: torch.Tensor, default_value: Any) -> torch.Tensor:
         return torch.fill_(input=data, value=default_value)
 
-    # endregion
-
-    # region Other methods
     def address_emptiness_iterator(
         self, start: int = 0, end: Optional[int] = None
     ) -> Iterable[bool]:
         return self.address_emptiness_iterator_(
             data=self._data, empty_entry=self.default_entry, start=start, end=end
         )
-
-    def append(
-        self,
-        new_data: torch.Tensor,
-        allow_padding: bool = False,
-        allow_reshaping: bool = False,
-    ):
-        self._data = self.get_appended(
-            new_data=new_data,
-            allow_padding=allow_padding,
-            allow_reshaping=allow_reshaping,
-        )
-
-    def clear(self):
-        self.clear_(block=self)
 
     def compress(self, start: int = 0, end: Optional[int] = None):
         if end is None:
@@ -259,29 +244,10 @@ class PyTorchBlock(ShapedBlock):
             data=self._data, empty_entry=self.default_entry, start=start, end=end
         )
 
-    def from_tensor(self, tensor: torch.Tensor) -> "PyTorchBlock":
-        return self.from_tensor_(tensor=tensor, default_value=self.default_value)
-
-    def get_appended(
-        self,
-        new_data: torch.Tensor,
-        allow_padding: bool = False,
-        allow_reshaping: bool = False,
-    ):
-        return self.append_(
-            data=self._data,
-            new_data=new_data,
-            allow_padding=allow_padding,
-            allow_reshaping=allow_reshaping,
-        )
-
     def get_compressed(self, start: int = 0, end: Optional[int] = None) -> torch.Tensor:
         return self.compress_(
             data=self._data, empty_entry=self.default_entry, start=start, end=end
         )
-
-    def get_wiped(self) -> torch.Tensor:
-        return self.wipe_(data=self._data, default_value=self.default_value)
 
     def non_empty_indices_iterator(
         self, start: int = 0, end: Optional[int] = None
@@ -289,9 +255,7 @@ class PyTorchBlock(ShapedBlock):
         return self.non_empty_indices_iterator_(
             data=self._data, empty_entry=self.default_entry, start=start, end=end
         )
-
-    def wipe(self):
-        self._data = self.get_wiped()
+    """
 
     # endregion
 

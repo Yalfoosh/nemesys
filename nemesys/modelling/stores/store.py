@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from math import prod
 import pprint
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -124,14 +123,3 @@ class ListStore(Store):
         return pprint.pformat(self._blocks, indent=2)
 
     # endregion
-=======
-from typing import Iterable
-
-from nemesys.modelling.blocks.block import Block
-
-
-class Store:
-    @property
-    def blocks(self) -> Iterable[Block]:
-        raise NotImplementedError
->>>>>>> 21a96dec0ba4f1c36d83f7ebdc46486fc9a659d0
