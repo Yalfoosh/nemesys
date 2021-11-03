@@ -19,12 +19,8 @@ class PyTorchEncoder(Encoder, torch.nn.Module):
 
     # endregion
 
-    def encode(
-        self, inputs: Dict[str, Dict[str, torch.Tensor]]
-    ) -> Dict[str, Dict[str, torch.Tensor]]:
+    def encode(self, inputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         return self._module(inputs)
 
-    def forward(
-        self, inputs: Dict[str, Dict[str, torch.Tensor]]
-    ) -> Dict[str, Dict[str, torch.Tensor]]:
+    def forward(self, inputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         return self.encode(inputs=inputs)
