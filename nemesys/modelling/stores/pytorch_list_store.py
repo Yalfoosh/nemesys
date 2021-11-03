@@ -10,8 +10,6 @@ class PyTorchListStore(ListStore):
     def __init__(self):
         super().__init__()
 
-        self._blocks = list()
-
     # region Store implementation
     """
     @staticmethod

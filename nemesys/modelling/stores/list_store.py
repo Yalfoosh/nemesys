@@ -1,5 +1,5 @@
 import pprint
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List
 
 from nemesys.modelling.blocks.block import Block
 from nemesys.modelling.stores.store import Store
