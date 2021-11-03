@@ -147,6 +147,9 @@ class PyTorchBlock(ShapedBlock):
         if cast_method == "tensor":
             return PyTorchBlock.from_tensor(tensor=content)
 
+    def clone(self) -> "PyTorchBlock":
+        return self.init_from(content=self._data)
+
     def default(self) -> "PyTorchBlock":
         return PyTorchBlock.from_tensor(tensor=self.default())
 
