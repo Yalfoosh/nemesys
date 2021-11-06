@@ -110,7 +110,7 @@ class MinHash:
     # endregion
 
     # region Single hashing
-    def get_hash_eager(self, data: Any):
+    def get_hash_eager(self, data: Any) -> Any:
         preprocessed = self.preprocess(
             data=data, preprocess_function=self.preprocess_function
         )
@@ -123,7 +123,7 @@ class MinHash:
 
         return bounded_hash
 
-    def get_minhash_eager(self, data: Any, state: Any):
+    def get_minhash_eager(self, data: Any, state: Any) -> Any:
         bounded_hash = self.get_hash_eager(data=data)
         minhash = self.bounded_hash_to_minhash(
             bounded_hash=bounded_hash, hash_state=state
@@ -137,20 +137,38 @@ class MinHash:
     # endregion
 
     # region Batch hashing
-    def get_hash_batch_eager(self, data_batch: Iterable[Any]):
-        for data in data_batch:
-            yield self.get_hash_eager(data=data)
+    def get_hash_batch_eager(self, data_batch: Iterable[Any]) -> Iterable[Any]:
+        preprocessed_batch = self.preprocess_batch(
+            data_batch=data_batch, preprocess_function=self.preprocess_function
+        )
+        base_hashes = self.data_batch_to_base_hashes(
+            data_batch=preprocessed_batch, a=self.a, b=self.b, prime=self.prime
+        )
+        bounded_hashes = self.base_hashes_to_bounded_hashes(
+            base_hashes=base_hashes, bound=self.bound
+        )
 
-    def get_minhash_batch_eager(self, data_batch: Iterable[Any], state: Any):
-        for data in data_batch:
-            state = self.get_minhash_eager(data=data, state=state)
+        return bounded_hashes
 
-        return state
+    def get_minhash_batch_eager(self, data_batch: Iterable[Any], state: Any) -> Any:
+        bounded_hashes = self.get_hash_batch_eager(data_batch=data_batch)
+        minhash = self.bounded_hashes_to_minhash(
+            bounded_hashes=bounded_hashes, state=state
+        )
+
+        return minhash
 
     def update_batch(self, data_batch: Iterable[Any]) -> Any:
         self.state = self.get_minhash_batch_eager(
             data_batch=data_batch, state=self.state
         )
+
+    # endregion
+
+    # region Multiple hashing
+    def get_hash_many_eager(self, data_many: Iterable[Any]) -> Iterable:
+        for data in data_many:
+            yield self.get_hash_eager(data=data)
 
     # endregion
 
