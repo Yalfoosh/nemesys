@@ -165,7 +165,7 @@ class NumPyMinHash(MinHash):
         bounded_hashes: Iterable[npt.NDArray[np.uint64]], state: npt.NDArray[np.uint64]
     ) -> npt.NDArray[np.uint64]:
         return np.minimum(
-            np.array(bounded_hashes, dtype=np.uint64),
+            np.array(list(bounded_hashes), dtype=np.uint64),
             state,
         )
 

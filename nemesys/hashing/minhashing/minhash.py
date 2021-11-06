@@ -123,7 +123,10 @@ class MinHash:
 
         return bounded_hash
 
-    def get_minhash_eager(self, data: Any, state: Any) -> Any:
+    def get_minhash_eager(self, data: Any, state: Optional[Any]) -> Any:
+        if state is None:
+            state = self.base_state
+
         bounded_hash = self.get_hash_eager(data=data)
         minhash = self.bounded_hash_to_minhash(
             bounded_hash=bounded_hash, hash_state=state
@@ -150,7 +153,12 @@ class MinHash:
 
         return bounded_hashes
 
-    def get_minhash_batch_eager(self, data_batch: Iterable[Any], state: Any) -> Any:
+    def get_minhash_batch_eager(
+        self, data_batch: Iterable[Any], state: Optional[Any] = None
+    ) -> Any:
+        if state is None:
+            state = self.base_state
+
         bounded_hashes = self.get_hash_batch_eager(data_batch=data_batch)
         minhash = self.bounded_hashes_to_minhash(
             bounded_hashes=bounded_hashes, state=state
@@ -171,8 +179,11 @@ class MinHash:
             yield self.get_hash_eager(data=data)
 
     def get_minhash_many_eager(
-        self, data_many: Iterable[Any], state: Any
+        self, data_many: Iterable[Any], state: Optional[Any] = None
     ) -> Iterable[Any]:
+        if state is None:
+            state = self.base_state
+
         for data in data_many:
             yield self.get_minhash_eager(data=data, state=state)
 
@@ -186,8 +197,11 @@ class MinHash:
             yield self.get_hash_batch_eager(data_batch=data_batch)
 
     def get_minhash_batch_many_eager(
-        self, data_batch_many: Iterable[Iterable[Any]], state: Any
+        self, data_batch_many: Iterable[Iterable[Any]], state: Optional[Any] = None
     ) -> Iterable[Any]:
+        if state is None:
+            state = self.base_state
+
         for data_batch in data_batch_many:
             yield self.get_minhash_batch_eager(data_batch=data_batch, state=state)
 
