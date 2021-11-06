@@ -166,9 +166,30 @@ class MinHash:
     # endregion
 
     # region Multiple hashing
-    def get_hash_many_eager(self, data_many: Iterable[Any]) -> Iterable:
+    def get_hash_many_eager(self, data_many: Iterable[Any]) -> Iterable[Any]:
         for data in data_many:
             yield self.get_hash_eager(data=data)
+
+    def get_minhash_many_eager(
+        self, data_many: Iterable[Any], state: Any
+    ) -> Iterable[Any]:
+        for data in data_many:
+            yield self.get_minhash_eager(data=data, state=state)
+
+    # endregion
+
+    # region Multiple batch hashing
+    def get_hash_batch_many_eager(
+        self, data_batch_many: Iterable[Iterable[Any]]
+    ) -> Iterable[Any]:
+        for data_batch in data_batch_many:
+            yield self.get_hash_batch_eager(data_batch=data_batch)
+
+    def get_minhash_batch_many_eager(
+        self, data_batch_many: Iterable[Iterable[Any]], state: Any
+    ) -> Iterable[Any]:
+        for data_batch in data_batch_many:
+            yield self.get_minhash_batch_eager(data_batch=data_batch, state=state)
 
     # endregion
 
