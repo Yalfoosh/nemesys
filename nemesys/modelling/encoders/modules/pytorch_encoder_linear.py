@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List
+from typing import Dict
 
 import torch
 import torch.nn
@@ -11,7 +11,7 @@ class PyTorchEncoderLinear(torch.nn.Module):
         in_features: int,
         out_features: int,
         bias: bool = False,
-        content_key: str = "output",
+        content_key: str = "content",
     ):
         super().__init__()
 
@@ -27,4 +27,4 @@ class PyTorchEncoderLinear(torch.nn.Module):
     def forward(self, inputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         inputs = inputs[self._content_key]
 
-        return {"output": inputs[self._content_key]}
+        return {"content": self._linear(inputs)}
