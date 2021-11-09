@@ -62,6 +62,9 @@ class ShapeConversion:
 
         return shape_tuple
 
+class IntegerConversion:
+    def to_numpy(integer: int, dtype=np.)
+
 
 class IterableConversion:
     @staticmethod
