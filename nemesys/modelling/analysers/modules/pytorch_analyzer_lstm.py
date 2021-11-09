@@ -60,6 +60,6 @@ class PyTorchAnalyzerLSTM(torch.nn.Module):
 
         # Dict[class_name, Dict[tensor_name, tensor]]
         return {
-            class_name: {"inputs": lstm_out[classifications == i]}
+            class_name: {"output": lstm_out[classifications == i]}
             for i, class_name in enumerate(self._class_names)
         }
