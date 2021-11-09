@@ -17,11 +17,15 @@ class MinHashConcatenationRouter(ConcatenationRouter):
     def minhash_instance(self) -> MinHash:
         return self._minhash_instance
 
-    def concatenate(self, inputs: Iterable[Any]) -> npt.NDArray[np.uint64]:
-        minhashed_inputs = self.minhash_instance.get_minhash_many_eager(
+    def concatenate(self, inputs: Iterable[Any]) -> Iterable[Any]:
+        minhashed_inputs_list = self.minhash_instance.get_minhash_many_eager(
             data_many=inputs
         )
-        concatenated_output = np.concatenate(minhashed_inputs)
+        concatenated_output = [
+            minhashed_input
+            for minhashed_inputs in minhashed_inputs_list
+            for minhashed_input in minhashed_inputs
+        ]
 
         return concatenated_output
 
