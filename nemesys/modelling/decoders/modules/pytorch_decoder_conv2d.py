@@ -19,7 +19,6 @@ class PyTorchDecoderConv2D(torch.nn.Module):
         groups: Union[int, Tuple[int, int]] = 1,
         bias: bool = True,
         padding_mode: str = "zeros",
-        content_key: str = "content",
     ):
         super().__init__()
 
@@ -35,12 +34,6 @@ class PyTorchDecoderConv2D(torch.nn.Module):
             padding_mode=padding_mode,
         )
 
-        self._content_key = content_key
-
-    @property
-    def content_key(self) -> str:
-        return self._content_key
-
     def forward(self, inputs: PyTorchListStore) -> Dict[str, torch.Tensor]:
         # (n_blocks, )
         inputs = inputs.get_all()
@@ -48,4 +41,4 @@ class PyTorchDecoderConv2D(torch.nn.Module):
         inputs = torch.cat(tuple(x.data for x in inputs), dim=0)
         inputs = torch.reshape(inputs, shape=(inputs.shape[0], -1))
 
-        return {"output": self._conv(inputs)}
+        return {"content": self._conv(inputs)}
