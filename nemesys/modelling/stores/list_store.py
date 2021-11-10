@@ -41,14 +41,14 @@ class ListStore(Store):
             self.remove_one(key=key)
 
     def set_all(self, content: Iterable[Block]):
-        self._blocks = content
+        self._blocks = list(content)
 
     def set_one(self, key: int, content: Block):
         self._blocks[key] = content
 
     def set_some(self, keys: Iterable[int], contents: Iterable[Block]):
         for key, content in zip(keys, contents):
-            self._blocks[key] = content
+            self.set_one(key=key, content=content)
 
     # endregion
 

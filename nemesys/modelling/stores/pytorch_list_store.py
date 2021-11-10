@@ -4,9 +4,10 @@ import numpy as np
 
 from nemesys.modelling.blocks.pytorch_block import PyTorchBlock
 from nemesys.modelling.stores.list_store import ListStore
+from nemesys.modelling.stores.pytorch_store import PyTorchStore
 
 
-class PyTorchListStore(ListStore):
+class PyTorchListStore(PyTorchStore, ListStore):
     def __init__(self):
         super().__init__()
 
@@ -45,14 +46,14 @@ class PyTorchListStore(ListStore):
             self.remove_one(key=key)
 
     def set_all(self, content: Iterable[PyTorchBlock]):
-        self._blocks = content
+        self._blocks = list(content)
 
     def set_one(self, key: int, content: PyTorchBlock):
         self._blocks[key] = content
 
     def set_some(self, keys: Iterable[int], contents: Iterable[PyTorchBlock]):
         for key, content in zip(keys, contents):
-            self._blocks[key] = content
+            self.set_one(key=key, content=content)
 
     # endregion
 
