@@ -4,9 +4,10 @@ import numpy as np
 
 from nemesys.modelling.blocks.pytorch_block import PyTorchBlock
 from nemesys.modelling.stores.list_store import ListStore
+from nemesys.modelling.stores.pytorch_store import PyTorchStore
 
 
-class PyTorchListStore(ListStore):
+class PyTorchListStore(PyTorchStore, ListStore):
     def __init__(self):
         super().__init__()
 
