@@ -22,23 +22,14 @@ class NumPyMinHash(MinHash):
         if base_state is None:
             base_state = self.default_base_state
         if bound is None:
-<<<<<<< HEAD
-            bound = self.bound
-=======
             bound = self.default_bound
->>>>>>> 9174dec572aa7889893e3229cb6a06c3bcc1f52a
 
         super().__init__(
             n_permutations=n_permutations,
             seed=seed,
             preprocess_function=preprocess_function,
-<<<<<<< HEAD
-            prime=NumPyConversion.to_array(prime, dtype=np.uint64),
-            base_state=NumPyConversion.to_array(base_state, dtype=np.uint32),
-=======
             prime=NumPyConversion.to_array(content=prime, dtype=np.uint64),
             base_state=NumPyConversion.to_array(content=base_state, dtype=np.uint32),
->>>>>>> 9174dec572aa7889893e3229cb6a06c3bcc1f52a
             bound=NumPyConversion.to_array(content=bound, dtype=np.uint64),
         )
 
