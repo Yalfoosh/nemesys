@@ -5,7 +5,7 @@ import torch.nn
 import torch.nn.functional
 
 
-class PyTorchAnalyzerLSTM(torch.nn.Module):
+class PyTorchAnalyserLSTM(torch.nn.Module):
     def __init__(
         self,
         class_names: Iterable[str],
@@ -50,7 +50,7 @@ class PyTorchAnalyzerLSTM(torch.nn.Module):
                 torch.zeros(1, batch_size, self._lstm.hidden_size),
             ),
         )
-        lstm_out = torch.nn.functional.tanh(lstm_out)
+        lstm_out = torch.tanh(lstm_out)
 
         # (batch_size/seq_len, seq_len/batch_size, len(self._class_names))
         class_logits = self._classifier(lstm_out)

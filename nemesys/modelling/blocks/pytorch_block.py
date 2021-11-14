@@ -151,7 +151,7 @@ class PyTorchBlock(ShapedBlock):
         return self.init_from(content=self._data)
 
     def default(self) -> "PyTorchBlock":
-        return PyTorchBlock.from_tensor(tensor=self.default())
+        return PyTorchBlock.from_tensor(tensor=self.get_defaulted())
 
     # endregion
 
