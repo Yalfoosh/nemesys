@@ -1,4 +1,5 @@
 from typing import Any
+
 from modelling.analysers.analyser import Analyser
 from modelling.decoders.decoder import Decoder
 from modelling.encoders.encoder import Encoder

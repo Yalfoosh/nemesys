@@ -1,6 +1,5 @@
+import pprint
 from typing import Iterable, List
-
-import numpy as np
 
 from nemesys.modelling.blocks.pytorch_block import PyTorchBlock
 from nemesys.modelling.stores.list_store import ListStore
@@ -59,6 +58,6 @@ class PyTorchListStore(PyTorchStore, ListStore):
 
     # region Dunder methods
     def __str__(self):
-        return str(np.array([block.data.cpu().numpy() for block in self.blocks]))
+        return pprint.pformat([block.data.cpu() for block in self.blocks])
 
     # endregion

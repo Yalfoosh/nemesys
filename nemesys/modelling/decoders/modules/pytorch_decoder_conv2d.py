@@ -37,8 +37,11 @@ class PyTorchDecoderConv2D(torch.nn.Module):
     def forward(self, inputs: PyTorchListStore) -> Dict[str, torch.Tensor]:
         # (n_blocks, )
         inputs = inputs.get_all()
-        # (n_blocks * base_shape[0], *base_shape[1:])
+        # (n_entries, *base_shape)
         inputs = torch.cat(tuple(x.data for x in inputs), dim=0)
-        inputs = torch.reshape(inputs, shape=(inputs.shape[0], -1))
+        # (1, in_channels, n_blocks, prod(base_shape))
+        inputs = torch.reshape(
+            inputs, shape=(1, self._conv.in_channels, inputs.shape[0], -1)
+        )
 
         return {"content": self._conv(inputs)}
