@@ -27,9 +27,11 @@ class PyTorchSynthesiserLinear(torch.nn.Module):
     def forward(
         self, inputs: Dict[str, Dict[str, torch.Tensor]]
     ) -> Dict[str, torch.Tensor]:
-        # (n, in_features)
-        inputs = torch.cat(tuple(x[self._content_key] for x in inputs.values()), dim=0)
-        # (1, in_features)
-        inputs = torch.sum(inputs, dim=0, dtype=inputs.dtype)
+        # (n, batch_size, ..., in_features)
+        inputs = torch.stack(
+            tuple(x[self._content_key] for x in inputs.values()), dim=0
+        )
+        # (batch_size, ..., in_features)
+        inputs = torch.sum(inputs, dim=0)
 
         return {"content": self._linear(inputs)}

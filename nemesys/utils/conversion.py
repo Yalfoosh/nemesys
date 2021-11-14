@@ -62,9 +62,6 @@ class ShapeConversion:
 
         return shape_tuple
 
-class IntegerConversion:
-    def to_numpy(integer: int, dtype=np.)
-
 
 class IterableConversion:
     @staticmethod
@@ -89,4 +86,3 @@ class IterableConversion:
             return iterable[0]
         else:
             return separator.join(iterable[:-1]) + f"{last_prefix}{iterable[-1]}"
-
