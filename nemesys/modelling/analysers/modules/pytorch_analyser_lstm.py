@@ -1,5 +1,3 @@
-from typing import Dict, Iterable, List
-
 import torch
 import torch.nn
 import torch.nn.functional
@@ -8,7 +6,7 @@ import torch.nn.functional
 class PyTorchAnalyserLSTM(torch.nn.Module):
     def __init__(
         self,
-        class_names: Iterable[str],
+        class_names,
         *args,
         **kwargs,
     ):
@@ -36,10 +34,10 @@ class PyTorchAnalyserLSTM(torch.nn.Module):
             )
 
     @property
-    def class_names(self) -> List[str]:
+    def class_names(self):
         return self._class_names
 
-    def forward(self, inputs: torch.Tensor) -> Dict[str, Dict[str, torch.Tensor]]:
+    def forward(self, inputs):
         batch_size = inputs.shape[0 if self._lstm.batch_first else 1]
 
         # (batch_size/seq_len, seq_len/batch_size, hidden_size)
