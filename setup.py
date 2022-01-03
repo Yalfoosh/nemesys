@@ -30,7 +30,7 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
@@ -49,7 +49,7 @@ setup(
         "torch",
         "tqdm",
     ],
-    python_requires=">=3.6, <=3.10",
+    python_requires=">=3.6, <3.9",
     package_data={
         "documentation": ["docs/*"],
         "demonstration": ["demo/*"],
