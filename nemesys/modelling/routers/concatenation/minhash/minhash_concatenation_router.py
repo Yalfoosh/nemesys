@@ -17,17 +17,29 @@ class MinHashConcatenationRouter(ConcatenationRouter):
     def minhash_instance(self) -> MinHash:
         return self._minhash_instance
 
-    def concatenate(self, inputs: Iterable[Any]) -> Iterable[Any]:
-        minhashed_inputs_list = self.minhash_instance.get_minhash_many_eager(
-            data_many=inputs
-        )
-        concatenated_output = [
-            minhashed_input
-            for minhashed_inputs in minhashed_inputs_list
-            for minhashed_input in minhashed_inputs
-        ]
+    def concatenate(
+        self, inputs: Iterable[Iterable[Iterable[Any]]]
+    ) -> Iterable[Iterable[Any]]:
+        # inputs: (n, batch, x)
+        outputs = list()
 
-        return concatenated_output
+        for entry in inputs:
+            batches = list()
 
-    def route(self, inputs: Iterable[Any]) -> npt.NDArray[np.uint64]:
+            for batch in entry:
+                batches.append(
+                    self.minhash_instance.get_minhash_batch_eager(data_batch=batch)
+                )
+
+            outputs.append(np.array(batches))
+
+        # outputs: (n, batch, n_perm)
+        outputs = np.array(outputs, dtype=np.uint64)
+
+        # outputs: (batch, n * n_perm)
+        outputs = np.concatenate(outputs, axis=1)
+
+        return outputs
+
+    def route(self, inputs: Iterable[Any]):  # -> npt.NDArray[np.uint64]:
         return self.concatenate(inputs=inputs)
