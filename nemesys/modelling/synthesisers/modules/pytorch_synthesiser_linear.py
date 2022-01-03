@@ -1,18 +1,8 @@
-from typing import Dict
-
 import torch
-import torch.nn
-import torch.nn.functional
 
 
 class PyTorchSynthesiserLinear(torch.nn.Module):
-    def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        bias: bool = False,
-        content_key: str = "content",
-    ):
+    def __init__(self, in_features, out_features, bias=False, content_key="content"):
         super().__init__()
 
         self._linear = torch.nn.Linear(
@@ -21,12 +11,10 @@ class PyTorchSynthesiserLinear(torch.nn.Module):
         self._content_key = content_key
 
     @property
-    def content_key(self) -> str:
+    def content_key(self):
         return self._content_key
 
-    def forward(
-        self, inputs: Dict[str, Dict[str, torch.Tensor]]
-    ) -> Dict[str, torch.Tensor]:
+    def forward(self, inputs):
         # (n, batch_size, ..., in_features)
         inputs = torch.stack(
             tuple(x[self._content_key] for x in inputs.values()), dim=0

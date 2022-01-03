@@ -1,7 +1,4 @@
-from typing import Dict
-
 import torch
-import torch.nn
 
 from nemesys.modelling.synthesisers.synthesiser import Synthesiser
 
@@ -15,17 +12,13 @@ class PyTorchSynthesiser(torch.nn.Module, Synthesiser):
 
     # region Properties
     @property
-    def module(self) -> torch.nn.Module:
+    def module(self):
         return self._module
 
     # endregion
 
-    def synthesise(
-        self, components: Dict[str, Dict[str, torch.Tensor]]
-    ) -> Dict[str, torch.Tensor]:
+    def synthesise(self, components):
         return self._module(components)
 
-    def forward(
-        self, components: Dict[str, Dict[str, torch.Tensor]]
-    ) -> Dict[str, torch.Tensor]:
+    def forward(self, components):
         return self.synthesise(components=components)
