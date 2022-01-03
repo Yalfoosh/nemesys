@@ -1,15 +1,12 @@
-from typing import Any, Callable, Iterable, Optional
-
-
 class MinHash:
     def __init__(
         self,
-        n_permutations: Any,
-        seed: Any,
-        preprocess_function: Callable[[Any], Any],
-        prime: Optional[Any] = None,
-        base_state: Optional[Any] = None,
-        bound: Optional[Any] = None,
+        n_permutations,
+        seed,
+        preprocess_function,
+        prime=None,
+        base_state=None,
+        bound=None,
     ):
         self._n_permutations = n_permutations
         self._seed = seed
@@ -24,93 +21,87 @@ class MinHash:
 
     # region Properties
     @property
-    def a(self) -> Any:
+    def a(self):
         raise NotImplementedError
 
     @property
-    def b(self) -> Any:
+    def b(self):
         raise NotImplementedError
 
     @property
-    def base_state(self) -> Any:
+    def base_state(self):
         return self._base_state
 
     @property
-    def bound(self) -> Any:
+    def bound(self):
         return self._bound
 
     @property
-    def n_permutations(self) -> Any:
+    def n_permutations(self):
         return self._n_permutations
 
     @property
-    def preprocess_function(self) -> Callable[[Any], Any]:
+    def preprocess_function(self):
         return self._preprocess_function
 
     @property
-    def prime(self) -> Any:
+    def prime(self):
         return self._prime
 
     @property
-    def seed(self) -> Any:
+    def seed(self):
         return self._seed
 
     @property
-    def state(self) -> Any:
+    def state(self):
         return self._state
 
     @state.getter
-    def state(self, value: Any):
+    def state(self, value):
         self._state = value
 
     # endregion
 
     # region Single implementation
     @staticmethod
-    def preprocess(data: Any, preprocess_function: Callable[[Any], Any]) -> Any:
+    def preprocess(data, preprocess_function):
         raise NotImplementedError
 
     @staticmethod
-    def data_to_base_hash(data: Any, a: Any, b: Any, prime: Any) -> Any:
+    def data_to_base_hash(data, a, b, prime):
         raise NotImplementedError
 
     @staticmethod
-    def base_hash_to_bounded_hash(base_hash: Any, bound: Any) -> Any:
+    def base_hash_to_bounded_hash(base_hash, bound):
         raise NotImplementedError
 
     @staticmethod
-    def bounded_hash_to_minhash(bounded_hash: Any, state: Any) -> Any:
+    def bounded_hash_to_minhash(bounded_hash, state):
         raise NotImplementedError
 
     # endregion
 
     # region Batch implementation
     @staticmethod
-    def preprocess_batch(
-        data_batch: Iterable[Any], preprocess_function: Callable[[Any], Any]
-    ) -> Iterable[Any]:
+    def preprocess_batch(data_batch, preprocess_function):
         raise NotImplementedError
 
     @staticmethod
-    def data_batch_to_base_hashes(
-        data_batch: Iterable[Any], a: Any, b: Any, prime: Any
-    ) -> Iterable[Any]:
+    def data_batch_to_base_hashes(data_batch, a, b, prime):
         raise NotImplementedError
 
     @staticmethod
-    def base_hashes_to_bounded_hashes(
-        base_hashes: Iterable[Any], bound: Any
-    ) -> Iterable[Any]:
+    def base_hashes_to_bounded_hashes(base_hashes, bound):
         raise NotImplementedError
 
     @staticmethod
-    def bounded_hashes_to_minhash(bounded_hashes: Iterable[Any], state: Any) -> Any:
+    def bounded_hashes_to_minhash(bounded_hashes, state):
         raise NotImplementedError
 
     # endregion
 
     # region Single hashing
-    def get_hash_eager(self, data: Any) -> Any:
+    def get_hash_eager(self, data):
         preprocessed = self.preprocess(
             data=data, preprocess_function=self.preprocess_function
         )
@@ -123,7 +114,7 @@ class MinHash:
 
         return bounded_hash
 
-    def get_minhash_eager(self, data: Any, state: Optional[Any]) -> Any:
+    def get_minhash_eager(self, data, state):
         if state is None:
             state = self.base_state
 
@@ -134,13 +125,13 @@ class MinHash:
 
         return minhash
 
-    def update(self, data: Any) -> Any:
+    def update(self, data):
         self._state = self.get_minhash_eager(data=data, state=self.state)
 
     # endregion
 
     # region Batch hashing
-    def get_hash_batch_eager(self, data_batch: Iterable[Any]) -> Iterable[Any]:
+    def get_hash_batch_eager(self, data_batch):
         preprocessed_batch = self.preprocess_batch(
             data_batch=data_batch, preprocess_function=self.preprocess_function
         )
@@ -153,9 +144,7 @@ class MinHash:
 
         return bounded_hashes
 
-    def get_minhash_batch_eager(
-        self, data_batch: Iterable[Any], state: Optional[Any] = None
-    ) -> Any:
+    def get_minhash_batch_eager(self, data_batch, state=None):
         if state is None:
             state = self.base_state
 
@@ -166,7 +155,7 @@ class MinHash:
 
         return minhash
 
-    def update_batch(self, data_batch: Iterable[Any]) -> Any:
+    def update_batch(self, data_batch):
         self._state = self.get_minhash_batch_eager(
             data_batch=data_batch, state=self.state
         )
@@ -174,13 +163,11 @@ class MinHash:
     # endregion
 
     # region Multiple hashing
-    def get_hash_many_eager(self, data_many: Iterable[Any]) -> Iterable[Any]:
+    def get_hash_many_eager(self, data_many):
         for data in data_many:
             yield self.get_hash_eager(data=data)
 
-    def get_minhash_many_eager(
-        self, data_many: Iterable[Any], state: Optional[Any] = None
-    ) -> Iterable[Any]:
+    def get_minhash_many_eager(self, data_many, state=None):
         if state is None:
             state = self.base_state
 
@@ -190,15 +177,11 @@ class MinHash:
     # endregion
 
     # region Multiple batch hashing
-    def get_hash_batch_many_eager(
-        self, data_batch_many: Iterable[Iterable[Any]]
-    ) -> Iterable[Any]:
+    def get_hash_batch_many_eager(self, data_batch_many):
         for data_batch in data_batch_many:
             yield self.get_hash_batch_eager(data_batch=data_batch)
 
-    def get_minhash_batch_many_eager(
-        self, data_batch_many: Iterable[Iterable[Any]], state: Optional[Any] = None
-    ) -> Iterable[Any]:
+    def get_minhash_batch_many_eager(self, data_batch_many, state=None):
         if state is None:
             state = self.base_state
 
@@ -210,5 +193,5 @@ class MinHash:
     def clear(self):
         self._state = self.base_state
 
-    def digest(self) -> Any:
+    def digest(self):
         return self.state
