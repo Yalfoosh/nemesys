@@ -135,7 +135,7 @@ class MinHash:
         return minhash
 
     def update(self, data: Any) -> Any:
-        self.state = self.get_minhash_eager(data=data, state=self.state)
+        self._state = self.get_minhash_eager(data=data, state=self.state)
 
     # endregion
 
@@ -167,7 +167,7 @@ class MinHash:
         return minhash
 
     def update_batch(self, data_batch: Iterable[Any]) -> Any:
-        self.state = self.get_minhash_batch_eager(
+        self._state = self.get_minhash_batch_eager(
             data_batch=data_batch, state=self.state
         )
 
@@ -208,7 +208,7 @@ class MinHash:
     # endregion
 
     def clear(self):
-        self.state = self.base_state
+        self._state = self.base_state
 
     def digest(self) -> Any:
         return self.state
