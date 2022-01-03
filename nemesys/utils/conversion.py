@@ -1,11 +1,9 @@
-from typing import Any, Iterable, Optional, Union
-
 import torch
 
 
 class DeviceConversion:
     @staticmethod
-    def to_torch(device: Union[str, torch.device]):
+    def to_torch(device):
         if isinstance(device, torch.device):
             return device
         else:
@@ -26,7 +24,7 @@ class DeviceConversion:
 
 class DtypeConversion:
     @staticmethod
-    def to_torch(dtype: Union[str, torch.dtype]):
+    def to_torch(dtype):
         if isinstance(dtype, torch.dtype):
             return dtype
         else:
@@ -47,7 +45,7 @@ class DtypeConversion:
 
 class ShapeConversion:
     @staticmethod
-    def to_tuple(shape: Union[int, Iterable[int]]):
+    def to_tuple(shape):
         try:
             shape_tuple = (int(shape),)
         except TypeError:
@@ -66,10 +64,10 @@ class ShapeConversion:
 class IterableConversion:
     @staticmethod
     def to_readable_string(
-        iterable: Iterable[Any],
-        default_string: Optional[str] = None,
-        separator: Optional[str] = None,
-        last_prefix: Optional[str] = None,
+        iterable,
+        default_string=None,
+        separator=None,
+        last_prefix=None,
     ):
         if default_string is None:
             default_string = ""

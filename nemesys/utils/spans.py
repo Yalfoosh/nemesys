@@ -1,9 +1,4 @@
-from typing import Iterable, Tuple
-
-
-def get_spans_from_indices(
-    indices: Iterable[int], is_sorted: bool = False
-) -> Iterable[Tuple[int, int]]:
+def get_spans_from_indices(indices, is_sorted=False):
     if not is_sorted:
         indices = sorted(indices)
 

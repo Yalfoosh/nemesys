@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import torch
 
@@ -16,11 +15,11 @@ class PyTorchTensorPreparation:
 
     @staticmethod
     def as_padded(
-        tensor: torch.Tensor,
-        shape: Tuple[int],
-        n_to_pad: int,
-        pad_mode: str = "end",
-    ) -> torch.Tensor:
+        tensor,
+        shape,
+        n_to_pad,
+        pad_mode="end",
+    ):
         n_to_pad = max(0, n_to_pad)
 
         if n_to_pad != 0:
@@ -61,17 +60,17 @@ class PyTorchTensorPreparation:
         return tensor
 
     @staticmethod
-    def for_block(tensor: torch.Tensor, dtype: torch.dtype, device: torch.device):
+    def for_block(tensor, dtype, device):
         tensor.requires_grad = False
 
         return tensor.to(device=device, dtype=dtype, non_blocking=False, copy=False)
 
     @staticmethod
     def for_block_insertion(
-        tensor: torch.Tensor,
-        base_shape: Tuple[int, ...],
-        dtype: torch.dtype,
-        device: torch.device,
+        tensor,
+        base_shape,
+        dtype,
+        device,
     ):
         tensor = PyTorchTensorPreparation.for_block(
             tensor=tensor, dtype=dtype, device=device
@@ -98,4 +97,3 @@ class PyTorchTensorPreparation:
                 tensor = tensor.reshape((-1, base_shape))
 
         return tensor
-
