@@ -1,6 +1,4 @@
 import torch
-import torch.nn
-import torch.nn.functional
 
 
 class PyTorchEncoderLinear(torch.nn.Module):

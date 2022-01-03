@@ -1,5 +1,4 @@
 import torch
-import torch.nn
 
 from nemesys.modelling.analysers.analyser import Analyser
 
