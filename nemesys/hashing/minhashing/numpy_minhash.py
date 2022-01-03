@@ -12,7 +12,7 @@ class NumPyMinHash(MinHash):
         self,
         n_permutations: int,
         seed: int,
-        preprocess_function: Callable[[Any], npt.NDArray[np.uint64]],
+        preprocess_function,  #: Callable[[Any], npt.NDArray[np.uint64]],
         prime: Optional[Union[np.uint64, int]] = None,
         base_state: Optional[Iterable[Union[np.uint32, int]]] = None,
         bound: Optional[Union[np.uint64, int]] = None,
@@ -20,6 +20,7 @@ class NumPyMinHash(MinHash):
         if prime is None:
             prime = self.default_prime
         if base_state is None:
+            self._n_permutations = n_permutations  # TODO: FIX THIS!
             base_state = self.default_base_state
         if bound is None:
             bound = self.default_bound
@@ -49,7 +50,7 @@ class NumPyMinHash(MinHash):
 
     # region Defaults
     @property
-    def default_base_state(self) -> npt.NDArray[np.uint64]:
+    def default_base_state(self):  # -> npt.NDArray[np.uint64]:
         return np.array([(2 ** 32) - 1] * self.n_permutations, dtype=np.uint64)
 
     @property
@@ -64,19 +65,19 @@ class NumPyMinHash(MinHash):
 
     # region Properties
     @property
-    def a(self) -> npt.NDArray[np.uint64]:
+    def a(self):  # -> npt.NDArray[np.uint64]:
         return self._a
 
     @property
-    def b(self) -> npt.NDArray[np.uint64]:
+    def b(self):  # -> npt.NDArray[np.uint64]:
         return self._b
 
     @property
-    def base_state(self) -> npt.NDArray[np.uint64]:
+    def base_state(self):  # -> npt.NDArray[np.uint64]:
         return np.copy(self._base_state)
 
     @property
-    def bound(self) -> npt.NDArray[np.uint64]:
+    def bound(self):  # -> npt.NDArray[np.uint64]:
         return self._bound
 
     @property
@@ -84,8 +85,8 @@ class NumPyMinHash(MinHash):
         return self._n_permutations
 
     @property
-    def preprocess_function(self) -> Callable[[Any], npt.NDArray[np.uint64]]:
-        return self._preprocessing_function
+    def preprocess_function(self):  # -> Callable[[Any], npt.NDArray[np.uint64]]:
+        return self._preprocess_function
 
     @property
     def prime(self) -> np.uint64:
@@ -96,7 +97,7 @@ class NumPyMinHash(MinHash):
         return self._seed
 
     @property
-    def state(self) -> npt.NDArray[np.uint64]:
+    def state(self):  # -> npt.NDArray[np.uint64]:
         return np.copy(self._state)
 
     # endregion
@@ -104,29 +105,31 @@ class NumPyMinHash(MinHash):
     # region Single implementation
     @staticmethod
     def preprocess(
-        data: Any, preprocess_function: Callable[[Any], npt.NDArray[np.uint64]]
+        data: Any, preprocess_function  #: Callable[[Any], npt.NDArray[np.uint64]]
     ) -> Any:
         return preprocess_function(data)
 
     @staticmethod
     def data_to_base_hash(
-        data: npt.NDArray[np.uint64],
-        a: npt.NDArray[np.uint64],
-        b: npt.NDArray[np.uint64],
+        data,  #: npt.NDArray[np.uint64],
+        a,  #: npt.NDArray[np.uint64],
+        b,  #: npt.NDArray[np.uint64],
         prime: Any,
     ) -> np.uint64:
         return ((data * a) + b) % prime
 
     @staticmethod
     def base_hash_to_bounded_hash(
-        base_hash: npt.NDArray[np.uint64], bound: np.uint64
-    ) -> npt.NDArray[np.uint64]:
+        base_hash,  #: npt.NDArray[np.uint64],
+        bound: np.uint64,
+    ):  # -> npt.NDArray[np.uint64]:
         return np.bitwise_and(base_hash, bound)
 
     @staticmethod
     def bounded_hash_to_minhash(
-        bounded_hash: npt.NDArray[np.uint64], state: npt.NDArray[np.uint64]
-    ) -> npt.NDArray[np.uint64]:
+        bounded_hash,  #: npt.NDArray[np.uint64],
+        state,  #: npt.NDArray[np.uint64],
+    ):  # -> npt.NDArray[np.uint64]:
         return np.minimum(bounded_hash, state)
 
     # endregion
@@ -143,18 +146,19 @@ class NumPyMinHash(MinHash):
 
     @staticmethod
     def data_batch_to_base_hashes(
-        data_batch: Iterable[npt.NDArray[np.uint64]],
-        a: npt.NDArray[np.uint64],
-        b: npt.NDArray[np.uint64],
+        data_batch,  #: Iterable[npt.NDArray[np.uint64]],
+        a,  #: npt.NDArray[np.uint64],
+        b,  #: npt.NDArray[np.uint64],
         prime: np.uint64,
-    ) -> Iterable[npt.NDArray[np.uint64]]:
+    ):  # -> Iterable[npt.NDArray[np.uint64]]:
         for data in data_batch:
             yield NumPyMinHash.data_to_base_hash(data=data, a=a, b=b, prime=prime)
 
     @staticmethod
     def base_hashes_to_bounded_hashes(
-        base_hashes: Iterable[npt.NDArray[np.uint64]], bound: np.uint64
-    ) -> Iterable[npt.NDArray[np.uint64]]:
+        base_hashes,  #: Iterable[npt.NDArray[np.uint64]],
+        bound: np.uint64,
+    ):  # -> Iterable[npt.NDArray[np.uint64]]:
         for base_hash in base_hashes:
             yield NumPyMinHash.base_hash_to_bounded_hash(
                 base_hash=base_hash, bound=bound
@@ -162,10 +166,11 @@ class NumPyMinHash(MinHash):
 
     @staticmethod
     def bounded_hashes_to_minhash(
-        bounded_hashes: Iterable[npt.NDArray[np.uint64]], state: npt.NDArray[np.uint64]
-    ) -> npt.NDArray[np.uint64]:
+        bounded_hashes,  #: Iterable[npt.NDArray[np.uint64]],
+        state,  #: npt.NDArray[np.uint64],
+    ):  # -> npt.NDArray[np.uint64]:
         return np.minimum(
-            np.array(list(bounded_hashes), dtype=np.uint64),
+            np.array(list(bounded_hashes)).min(axis=0),
             state,
         )
 
