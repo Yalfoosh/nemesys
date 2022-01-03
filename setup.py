@@ -46,6 +46,7 @@ setup(
         )
     ),
     install_requires=[
+        "numpy",
         "torch",
         "tqdm",
     ],
