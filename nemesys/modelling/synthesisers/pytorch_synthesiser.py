@@ -6,9 +6,10 @@ import torch.nn
 from nemesys.modelling.synthesisers.synthesiser import Synthesiser
 
 
-class PyTorchSynthesiser(Synthesiser, torch.nn.Module):
-    def __init__(self, module: torch.nn.Module):
-        super().__init__()
+class PyTorchSynthesiser(torch.nn.Module, Synthesiser):
+    def __init__(self, module):
+        torch.nn.Module.__init__()
+        Synthesiser.__init__()
 
         self._module = module
 
