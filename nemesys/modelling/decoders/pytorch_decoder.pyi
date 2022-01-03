@@ -1,0 +1,13 @@
+from typing import Dict
+
+import torch
+
+from nemesys.modelling.decoders.decoder import Decoder
+from nemesys.modelling.stores.store import Store
+
+class PyTorchDecoder(torch.nn.Module, Decoder):
+    def __init__(self, module: torch.nn.Module): ...
+    @property
+    def module(self) -> torch.nn.Module: ...
+    def decode(self, store: Store) -> Dict[str, torch.Tensor]: ...
+    def forward(self, store: Store) -> Dict[str, torch.Tensor]: ...

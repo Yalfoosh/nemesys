@@ -1,24 +1,20 @@
-from typing import Dict, Tuple, Union
-
 import torch
 import torch.nn
 import torch.nn.functional
-
-from nemesys.modelling.stores.pytorch_list_store import PyTorchListStore
 
 
 class PyTorchDecoderConv2D(torch.nn.Module):
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: Union[int, Tuple[int, int]],
-        stride: Union[int, Tuple[int, int]] = 1,
-        padding: Union[int, Tuple[int, int]] = 0,
-        dilation: Union[int, Tuple[int, int]] = 1,
-        groups: Union[int, Tuple[int, int]] = 1,
-        bias: bool = True,
-        padding_mode: str = "zeros",
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride=1,
+        padding=0,
+        dilation=1,
+        groups=1,
+        bias=True,
+        padding_mode="zeros",
     ):
         super().__init__()
 
@@ -34,7 +30,7 @@ class PyTorchDecoderConv2D(torch.nn.Module):
             padding_mode=padding_mode,
         )
 
-    def forward(self, inputs: PyTorchListStore) -> Dict[str, torch.Tensor]:
+    def forward(self, inputs):
         # (n_blocks, )
         inputs = inputs.get_all()
         # (n_entries, *base_shape)
