@@ -6,9 +6,10 @@ import torch.nn
 from nemesys.modelling.encoders.encoder import Encoder
 
 
-class PyTorchEncoder(Encoder, torch.nn.Module):
+class PyTorchEncoder(torch.nn.Module, Encoder):
     def __init__(self, module: torch.nn.Module):
-        super().__init__()
+        torch.nn.Module.__init__()
+        Encoder.__init__()
 
         self._module = module
 
