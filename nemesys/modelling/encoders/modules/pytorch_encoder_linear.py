@@ -1,5 +1,3 @@
-from typing import Dict
-
 import torch
 import torch.nn
 import torch.nn.functional
@@ -8,10 +6,10 @@ import torch.nn.functional
 class PyTorchEncoderLinear(torch.nn.Module):
     def __init__(
         self,
-        in_features: int,
-        out_features: int,
-        bias: bool = False,
-        content_key: str = "content",
+        in_features,
+        out_features,
+        bias=False,
+        content_key="content",
     ):
         super().__init__()
 
@@ -21,10 +19,10 @@ class PyTorchEncoderLinear(torch.nn.Module):
         self._content_key = content_key
 
     @property
-    def content_key(self) -> str:
+    def content_key(self):
         return self._content_key
 
-    def forward(self, inputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, inputs):
         inputs = inputs[self._content_key]
 
         return {"content": self._linear(inputs)}
