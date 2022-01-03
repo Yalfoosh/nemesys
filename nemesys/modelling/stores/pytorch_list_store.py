@@ -11,6 +11,7 @@ class PyTorchListStore(PyTorchStore, ListStore):
         super().__init__()
 
     # region Store implementation
+    # TODO: Add the init from method!
     """
     @staticmethod
     def init_from(content: Any, method: Optional[str]) -> "Store":
@@ -18,39 +19,39 @@ class PyTorchListStore(PyTorchStore, ListStore):
     """
 
     @property
-    def blocks(self) -> List[PyTorchBlock]:
+    def blocks(self):
         return self._blocks
 
-    def append(self, content: PyTorchBlock):
+    def append(self, content):
         self._blocks.append(content.clone())
 
-    def get_all(self) -> Iterable[PyTorchBlock]:
+    def get_all(self):
         return self.get_some(keys=range(len(self._blocks)))
 
-    def get_one(self, key: int) -> PyTorchBlock:
+    def get_one(self, key):
         return self._blocks[key]
 
-    def get_some(self, keys: Iterable[int]) -> Iterable[PyTorchBlock]:
+    def get_some(self, keys):
         for key in keys:
             yield self.get_one(key=key)
 
     def remove_all(self):
         self._blocks.clear()
 
-    def remove_one(self, key: int):
+    def remove_one(self, key):
         self._blocks.pop(key)
 
-    def remove_some(self, keys: Iterable[int]):
+    def remove_some(self, keys):
         for key in sorted(keys, reverse=True):
             self.remove_one(key=key)
 
-    def set_all(self, content: Iterable[PyTorchBlock]):
+    def set_all(self, content):
         self._blocks = list(content)
 
-    def set_one(self, key: int, content: PyTorchBlock):
+    def set_one(self, key, content):
         self._blocks[key] = content
 
-    def set_some(self, keys: Iterable[int], contents: Iterable[PyTorchBlock]):
+    def set_some(self, keys, contents):
         for key, content in zip(keys, contents):
             self.set_one(key=key, content=content)
 

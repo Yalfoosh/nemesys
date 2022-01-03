@@ -1,44 +1,41 @@
-from typing import Any, Iterable, Optional
-
 from nemesys.modelling.stores.store import Store
-from nemesys.modelling.blocks.pytorch_block import PyTorchBlock
 
 
 class PyTorchStore(Store):
     @property
-    def blocks(self) -> Iterable[PyTorchBlock]:
+    def blocks(self):
         raise NotImplementedError
 
     @staticmethod
-    def init_from(content: Any, method: Optional[str]) -> "PyTorchStore":
+    def init_from(content, method):
         raise NotImplementedError
 
-    def append(self, content: PyTorchBlock):
+    def append(self, content):
         raise NotImplementedError
 
-    def get_all(self) -> Iterable[PyTorchBlock]:
+    def get_all(self):
         raise NotImplementedError
 
-    def get_one(self, key: Any) -> PyTorchBlock:
+    def get_one(self, key):
         raise NotImplementedError
 
-    def get_some(self, keys: Iterable[Any]) -> Iterable[PyTorchBlock]:
+    def get_some(self, keys):
         raise NotImplementedError
 
     def remove_all(self):
         raise NotImplementedError
 
-    def remove_one(self, key: Any):
+    def remove_one(self, key):
         raise NotImplementedError
 
-    def remove_some(self, keys: Iterable[Any]):
+    def remove_some(self, keys):
         raise NotImplementedError
 
-    def set_all(self, content: Iterable[PyTorchBlock]):
+    def set_all(self, content):
         raise NotImplementedError
 
-    def set_one(self, key: Any, content: PyTorchBlock):
+    def set_one(self, key, content):
         raise NotImplementedError
 
-    def set_some(self, keys: Iterable[Any], contents: Iterable[PyTorchBlock]):
+    def set_some(self, keys, contents):
         raise NotImplementedError
